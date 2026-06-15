@@ -1,0 +1,8 @@
+# Ignore everything
+*
+
+# Except README and assets
+!README.md
+!assets/
+!assets/**
+!.gitignore
