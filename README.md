@@ -60,12 +60,4 @@ This is not just automation. It's an unfair advantage. Combined with the schedul
 
 ---
 
-## 💬 Availability
-
-This repository is a **preview only** — the source code is not publicly available.
-
-The tool is available for purchase. If you are interested, feel free to reach out.
-
----
-
 > This tool is provided as-is for personal use. The author assumes no responsibility for any consequences resulting from its use.

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>KuroHunt Tool</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <div class="header-title">KuroHunt Tool</div>
+      <div class="header-sub">dangkyhoc.vnu.edu.vn</div>
+    </div>
+    <span id="status-badge" class="badge badge-warning">Đang kết nối…</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="register">Đăng ký môn</button>
+    <button class="tab-btn"        data-tab="registered">Môn đã đăng ký</button>
+    <button class="tab-btn"        data-tab="timetable">Thời khóa biểu</button>
+  </div>
+
+  <!-- ── Tab 1: Đăng ký môn ── -->
+  <div id="tab-register" class="tab-content">
+    <div class="toolbar">
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="1">Theo ngành</button>
+        <button class="mode-btn"        data-mode="2">Toàn trường</button>
+      </div>
+      <button id="btn-fetch" class="btn btn-primary">Tải danh sách môn</button>
+      <input id="search-input" type="text" class="search-input"
+             placeholder="Tìm tên môn, mã lớp, giảng viên…">
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">Ngày:</span>
+        <button class="day-btn" data-day="T2">T2</button>
+        <button class="day-btn" data-day="T3">T3</button>
+        <button class="day-btn" data-day="T4">T4</button>
+        <button class="day-btn" data-day="T5">T5</button>
+        <button class="day-btn" data-day="T6">T6</button>
+        <button class="day-btn" data-day="T7">T7</button>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Buổi:</span>
+        <button class="sess-btn active" data-sess="all">Tất cả</button>
+        <button class="sess-btn" data-sess="morning">Sáng (1–6)</button>
+        <button class="sess-btn" data-sess="afternoon">Chiều (7–12)</button>
+        <button class="sess-btn" data-sess="evening">Tối (13+)</button>
+      </div>
+      <label class="filter-avail-label">
+        <input type="checkbox" id="filter-avail"> Còn chỗ
+      </label>
+    </div>
+
+    <div class="table-wrap">
+      <div id="loading"     class="state-msg hidden">Đang tải danh sách môn học…</div>
+      <div id="empty-state" class="state-msg">Nhấn "Tải danh sách môn" để bắt đầu.</div>
+      <table id="courses-table" class="hidden">
+        <thead>
+          <tr>
+            <th class="col-cb"><input type="checkbox" id="select-all" title="Chọn tất cả"></th>
+            <th class="col-name">Môn học</th>
+            <th class="col-code">Mã lớp</th>
+            <th class="col-tc">TC</th>
+            <th class="col-dk">ĐK/SS</th>
+            <th class="col-sched">Lịch học</th>
+            <th class="col-fee">Học phí</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="actions-bar">
+      <span id="sel-info" class="sel-info">Chưa chọn môn nào</span>
+      <button id="btn-add"     class="btn btn-success" disabled>Thêm môn đã chọn</button>
+      <button id="btn-confirm" class="btn btn-danger"  disabled>Xác nhận đăng ký</button>
+    </div>
+
+    <div class="scheduler">
+      <div class="sched-top">
+        <span class="sched-title">⏱ Hẹn giờ đăng ký tự động</span>
+        <span id="countdown" class="countdown hidden">00:00:00</span>
+      </div>
+      <div class="sched-body">
+        <div class="sched-row">
+          <label class="sched-label">Giờ mở ĐK</label>
+          <input type="datetime-local" id="schedule-time" step="1" class="sched-input">
+        </div>
+        <div class="sched-row">
+          <label class="sched-label">Thử lại mỗi</label>
+          <input type="number" id="retry-ms" value="300" min="50" max="5000" class="sched-num">
+          <span class="sched-unit">ms</span>
+          <label class="sched-label" style="margin-left:10px">trong</label>
+          <input type="number" id="retry-sec" value="60" min="5" max="300" class="sched-num">
+          <span class="sched-unit">giây</span>
+          <button id="btn-schedule" class="btn btn-primary sched-btn">Đặt hẹn giờ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab 2: Môn đã đăng ký ── -->
+  <div id="tab-registered" class="tab-content hidden">
+    <div class="toolbar">
+      <button id="btn-fetch-reg" class="btn btn-primary">Tải môn đã đăng ký</button>
+      <span id="reg-summary" class="reg-summary"></span>
+    </div>
+
+    <div class="table-wrap">
+      <div id="reg-loading"     class="state-msg hidden">Đang tải…</div>
+      <div id="reg-empty-state" class="state-msg">Nhấn "Tải môn đã đăng ký" để xem.</div>
+      <table id="reg-table" class="hidden">
+        <thead>
+          <tr>
+            <th class="col-idx">#</th>
+            <th class="col-name">Môn học</th>
+            <th class="col-code">Mã lớp</th>
+            <th class="col-tc">TC</th>
+            <th class="col-sched">Lịch học</th>
+            <th class="col-type">Loại ĐK</th>
+            <th class="col-cancel"></th>
+          </tr>
+        </thead>
+        <tbody id="reg-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Tab 3: Thời khóa biểu ── -->
+  <div id="tab-timetable" class="tab-content hidden">
+    <div class="timetable-wrap">
+      <div class="timetable-legend" id="tt-legend">
+        <span class="tt-empty-msg">Chọn môn hoặc tải môn đã đăng ký để xem thời khóa biểu.</span>
+      </div>
+      <table class="timetable">
+        <thead>
+          <tr>
+            <th class="tt-period-h">Tiết</th>
+            <th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th>
+            <th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th>
+          </tr>
+        </thead>
+        <tbody id="tt-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Log (dùng chung) ── -->
+  <div id="log-wrap" class="log-wrap hidden">
+    <div class="log-header">
+      <span>Nhật ký</span>
+      <button id="btn-clear-log" class="btn-link">Xóa</button>
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
