@@ -68,6 +68,11 @@ function firstTeacher(teachers) {
   return teachers.split(',')[0].trim();
 }
 
+function extractRooms(schedStr) {
+  const rooms = [...new Set(parseScheduleFull(schedStr).map(s => s.room))];
+  return rooms.join(', ') || '—';
+}
+
 function setBadge(text, type) {
   const el = document.getElementById('status-badge');
   el.textContent = text;
@@ -117,7 +122,7 @@ function renderTable() {
       <td class="c">${course.numCrd}</td>
       <td class="c">${dkCell}</td>
       <td class="sched-cell" style="white-space:pre-line">${formatSchedule(course.schedule)}</td>
-      <td class="r fee-cell">${course.fee || '—'}</td>
+      <td class="room-cell">${extractRooms(course.schedule)}</td>
     `;
     tbody.appendChild(tr);
   });

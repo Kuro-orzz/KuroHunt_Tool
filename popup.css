@@ -105,7 +105,7 @@ thead th {
 .col-tc    { width: 36px; text-align: center !important; }
 .col-dk    { width: 52px; text-align: center !important; }
 .col-sched { width: 180px; }
-.col-fee   { width: 82px; text-align: right !important; }
+.col-room  { width: 82px; }
 
 tbody tr { transition: background .1s; }
 tbody tr:nth-child(even)  { background: #f8faff; }
@@ -137,7 +137,7 @@ td.r  { text-align: right; }
 .course-teach { color: #64748b; font-size: 11px; margin-top: 1px; }
 .code-cell    { font-family: monospace; font-size: 11.5px; }
 .sched-cell   { font-size: 11px; line-height: 1.5; color: #334155; }
-.fee-cell     { font-size: 11px; color: #0f766e; white-space: nowrap; }
+.room-cell    { font-size: 11px; color: #334155; white-space: nowrap; }
 .conflict-icon { color: #ef4444; font-size: 10px; margin-left: 3px; }
 
 /* ── Actions bar ── */
