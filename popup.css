@@ -448,6 +448,15 @@ tbody tr.row-pending { background: #fefce8; }
   text-overflow: ellipsis;
   line-height: 1.3;
 }
+.tt-name {
+  font-size: 9px;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  font-style: italic;
+}
 .tt-room {
   font-size: 9px;
   color: #475569;

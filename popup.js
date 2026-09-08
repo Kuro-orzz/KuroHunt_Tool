@@ -272,7 +272,7 @@ function renderTimetable() {
         if (grid[day][p]) {
           grid[day][p].conflict = true; // two courses share this slot
         } else {
-          grid[day][p] = { isStart: p === start, code: c.code, room, color, conflict: false };
+          grid[day][p] = { isStart: p === start, code: c.code, name: c.name, room, color, conflict: false };
         }
       }
     });
@@ -339,10 +339,11 @@ function renderTimetable() {
           td.style.cssText =
             `background:${cell.color}28;border-left:3px solid ${cell.color};` +
             (cell.isStart ? `border-top:2px solid ${cell.color}` : 'border-top:none');
-          td.title = `${cell.code} · ${cell.room}`;
+          td.title = `${cell.name} · ${cell.room}`;
           if (cell.isStart) {
             td.innerHTML =
               `<div class="tt-code">${cell.code}</div>` +
+              `<div class="tt-name">${cell.name}</div>` +
               `<div class="tt-room">${cell.room}</div>`;
           }
         }
