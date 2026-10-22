@@ -22,6 +22,10 @@ let filterAvail   = false;
 // Active tab
 let currentTab = 'register';
 
+// Custom schedule (Tab 3)
+let customSchedule = [];
+let editingIndex   = -1; // -1 = new entry, ≥0 = editing existing
+
 // ── Messaging ─────────────────────────────────────────────────
 function send(msg) {
   return new Promise(resolve => {
@@ -232,6 +236,85 @@ function parseScheduleFull(schedStr) {
 }
 
 const TT_PALETTE = ['#3b82f6','#d97706','#7c3aed','#0891b2','#db2777','#ea580c','#0284c7','#65a30d'];
+const CUSTOM_COLORS = ['#8b5cf6','#06b6d4','#f59e0b','#10b981','#f43f5e','#6366f1'];
+
+function getCustomColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffff;
+  return CUSTOM_COLORS[hash % CUSTOM_COLORS.length];
+}
+
+function saveCustomSchedule() {
+  chrome.storage.local.set({ customSchedule });
+}
+
+function renderCustomList() {
+  const list = document.getElementById('custom-sched-list');
+  if (!list) return;
+  list.innerHTML = '';
+  customSchedule.forEach((entry, i) => {
+    const div = document.createElement('div');
+    div.className = 'custom-entry';
+    div.innerHTML =
+      `<span class="custom-entry-dot" style="background:${getCustomColor(entry.name)}"></span>` +
+      `<span class="custom-entry-name">${entry.name}</span>` +
+      `${entry.isNote ? '<span class="custom-note-badge">Ghi chú</span>' : ''}` +
+      `<span class="custom-entry-info">${entry.day} · Tiết ${entry.start}–${entry.end}${entry.room ? ' · ' + entry.room : ''}</span>` +
+      `<button class="custom-entry-edit" data-idx="${i}" title="Sửa">✎</button>` +
+      `<button class="custom-entry-del"  data-idx="${i}" title="Xóa">✕</button>`;
+    list.appendChild(div);
+  });
+  list.querySelectorAll('.custom-entry-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx   = +btn.dataset.idx;
+      const entry = customSchedule[idx];
+      editingIndex = idx;
+      document.getElementById('custom-name').value      = entry.name;
+      document.getElementById('custom-day').value       = entry.day;
+      document.getElementById('custom-start').value     = entry.start;
+      document.getElementById('custom-end').value       = entry.end;
+      document.getElementById('custom-room').value      = entry.room || '';
+      document.getElementById('custom-is-note').checked = !!entry.isNote;
+      document.getElementById('btn-save-custom').textContent = 'Cập nhật';
+      document.getElementById('custom-sched-form').classList.remove('hidden');
+    });
+  });
+  list.querySelectorAll('.custom-entry-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      customSchedule.splice(+btn.dataset.idx, 1);
+      saveCustomSchedule();
+      renderCustomList();
+      renderTimetable();
+    });
+  });
+}
+
+function exportCustomSchedule() {
+  const blob = new Blob([JSON.stringify(customSchedule, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'lich-tuy-chinh.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importCustomSchedule(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('File không đúng định dạng');
+      customSchedule = data;
+      saveCustomSchedule();
+      renderCustomList();
+      renderTimetable();
+      log(`Import thành công ${data.length} mục lịch tùy chỉnh`, 'ok');
+    } catch (err) {
+      log(`Lỗi import: ${err.message}`, 'err');
+    }
+  };
+  reader.readAsText(file);
+}
 
 function renderTimetable() {
   const DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
@@ -281,12 +364,27 @@ function renderTimetable() {
   registeredCourses.forEach(c => fillGrid(c));
   selCourses.forEach(c => fillGrid(c));
 
+  customSchedule.filter(e => !e.isNote).forEach(entry => {
+    const color = getCustomColor(entry.name);
+    if (!grid[entry.day]) return;
+    for (let p = entry.start; p <= entry.end; p++) {
+      if (grid[entry.day][p]) {
+        grid[entry.day][p].conflict = true;
+      } else {
+        grid[entry.day][p] = {
+          isStart: p === entry.start, code: entry.name, name: '',
+          room: entry.room || '', color, conflict: false, isCustom: true
+        };
+      }
+    }
+  });
+
   // ── Dynamic legend ───────────────────────────────────────────
   const legend = document.getElementById('tt-legend');
   legend.innerHTML = '';
   const keys = Object.keys(infoMap);
 
-  if (keys.length === 0) {
+  if (keys.length === 0 && customSchedule.length === 0) {
     const msg = document.createElement('span');
     msg.className   = 'tt-empty-msg';
     msg.textContent = 'Chọn môn hoặc tải môn đã đăng ký để xem thời khóa biểu.';
@@ -307,6 +405,18 @@ function renderTimetable() {
       item.innerHTML =
         `<span class="legend-dot" style="background:${color}33;border:2px solid ${color}"></span>` +
         `<span class="legend-course-code">${info.code}</span>` +
+        `<span class="${badgeClass}">${badgeText}</span>`;
+      legend.appendChild(item);
+    });
+    customSchedule.forEach(entry => {
+      const color = getCustomColor(entry.name);
+      const item = document.createElement('span');
+      item.className = 'legend-item';
+      const badgeClass = entry.isNote ? 'legend-badge legend-note' : 'legend-badge legend-custom';
+      const badgeText  = entry.isNote ? 'Ghi chú' : 'Tùy chỉnh';
+      item.innerHTML =
+        `<span class="legend-dot" style="background:${color}33;border:2px dashed ${color}"></span>` +
+        `<span class="legend-course-code">${entry.name}</span>` +
         `<span class="${badgeClass}">${badgeText}</span>`;
       legend.appendChild(item);
     });
@@ -336,10 +446,11 @@ function renderTimetable() {
           }
           td.title = 'Hai môn cùng lúc — xem lại lịch';
         } else {
+          const bs = cell.isCustom ? 'dashed' : 'solid';
           td.style.cssText =
-            `background:${cell.color}28;border-left:3px solid ${cell.color};` +
-            (cell.isStart ? `border-top:2px solid ${cell.color}` : 'border-top:none');
-          td.title = `${cell.name} · ${cell.room}`;
+            `background:${cell.color}28;border-left:3px ${bs} ${cell.color};` +
+            (cell.isStart ? `border-top:2px ${bs} ${cell.color}` : 'border-top:none');
+          td.title = cell.isCustom ? `${cell.code}${cell.room ? ' · ' + cell.room : ''}` : `${cell.name} · ${cell.room}`;
           if (cell.isStart) {
             td.innerHTML =
               `<div class="tt-code">${cell.code}</div>` +
@@ -353,6 +464,36 @@ function renderTimetable() {
 
     tbody.appendChild(tr);
   }
+
+  // ── Render note overlays ─────────────────────────────────────
+  customSchedule.filter(e => e.isNote).forEach(entry => {
+    const dayIdx = DAYS.indexOf(entry.day);
+    if (dayIdx < 0) return;
+    const color = getCustomColor(entry.name);
+    const label = `📌 ${entry.name}${entry.room ? ' · ' + entry.room : ''}`;
+    for (let p = entry.start; p <= entry.end; p++) {
+      const row  = tbody.children[p - 1];
+      if (!row) continue;
+      const cell = row.children[dayIdx + 1];
+      if (!cell) continue;
+      const hasGrid = grid[entry.day] && grid[entry.day][p];
+      if (hasGrid) {
+        // Cell đã có môn: thêm stripe mỏng ở dưới qua box-shadow
+        const prev = cell.style.boxShadow;
+        cell.style.boxShadow = prev
+          ? `${prev}, inset 0 -3px 0 ${color}`
+          : `inset 0 -3px 0 ${color}`;
+      } else {
+        // Ô trống: nền nhạt + dashed border trái + tên ở tiết đầu
+        cell.style.background  = `${color}18`;
+        cell.style.borderLeft  = `2px dashed ${color}`;
+        if (p === entry.start) {
+          cell.innerHTML = `<div style="font-size:9px;color:${color};font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3">${entry.name}</div>`;
+        }
+      }
+      cell.title = cell.title ? `${cell.title}\n${label}` : label;
+    }
+  });
 }
 
 function updateRegSummary() {
@@ -543,6 +684,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
+  chrome.storage.local.get('customSchedule', data => {
+    customSchedule = data.customSchedule || [];
+    renderCustomList();
+  });
+
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   tabId = tab?.id ?? null;
 
@@ -725,6 +871,82 @@ document.getElementById('btn-fetch-reg').addEventListener('click', async () => {
 document.getElementById('btn-clear-log').addEventListener('click', () => {
   document.getElementById('log').innerHTML = '';
   document.getElementById('log-wrap').classList.add('hidden');
+});
+
+// ── Export / Import ───────────────────────────────────────────
+document.getElementById('btn-export-custom').addEventListener('click', () => {
+  if (customSchedule.length === 0) { log('Chưa có lịch tùy chỉnh để xuất', 'warn'); return; }
+  exportCustomSchedule();
+});
+
+document.getElementById('btn-import-custom').addEventListener('click', () => {
+  document.getElementById('import-file').click();
+});
+
+document.getElementById('import-file').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) importCustomSchedule(file);
+  e.target.value = ''; // reset để có thể import cùng file lần nữa
+});
+
+// ── Event listeners: Tab 3 Custom Schedule ────────────────────
+document.getElementById('btn-toggle-custom-form').addEventListener('click', () => {
+  const form = document.getElementById('custom-sched-form');
+  const isHidden = form.classList.contains('hidden');
+  if (isHidden) {
+    // Reset về add mode khi mở form mới
+    editingIndex = -1;
+    document.getElementById('btn-save-custom').textContent = 'Lưu';
+    document.getElementById('custom-name').value      = '';
+    document.getElementById('custom-start').value     = '';
+    document.getElementById('custom-end').value       = '';
+    document.getElementById('custom-room').value      = '';
+    document.getElementById('custom-is-note').checked = false;
+  }
+  form.classList.toggle('hidden');
+});
+
+document.getElementById('btn-cancel-custom').addEventListener('click', () => {
+  editingIndex = -1;
+  document.getElementById('btn-save-custom').textContent = 'Lưu';
+  document.getElementById('custom-sched-form').classList.add('hidden');
+  document.getElementById('custom-name').value      = '';
+  document.getElementById('custom-start').value     = '';
+  document.getElementById('custom-end').value       = '';
+  document.getElementById('custom-room').value      = '';
+  document.getElementById('custom-is-note').checked = false;
+});
+
+document.getElementById('btn-save-custom').addEventListener('click', () => {
+  const name   = document.getElementById('custom-name').value.trim();
+  const day    = document.getElementById('custom-day').value;
+  const start  = parseInt(document.getElementById('custom-start').value, 10);
+  const end    = parseInt(document.getElementById('custom-end').value, 10);
+  const room   = document.getElementById('custom-room').value.trim();
+  const isNote = document.getElementById('custom-is-note').checked;
+
+  if (!name)                    { log('Nhập tên môn / sự kiện!', 'warn'); return; }
+  if (!start || !end)           { log('Nhập tiết bắt đầu và kết thúc!', 'warn'); return; }
+  if (start > end)              { log('Tiết bắt đầu phải ≤ tiết kết thúc!', 'warn'); return; }
+  if (start < 1 || end > 13)   { log('Tiết phải từ 1 đến 13!', 'warn'); return; }
+
+  if (editingIndex >= 0) {
+    customSchedule[editingIndex] = { name, day, start, end, room, isNote };
+    editingIndex = -1;
+    document.getElementById('btn-save-custom').textContent = 'Lưu';
+  } else {
+    customSchedule.push({ name, day, start, end, room, isNote });
+  }
+  saveCustomSchedule();
+  renderCustomList();
+  renderTimetable();
+
+  document.getElementById('custom-name').value      = '';
+  document.getElementById('custom-start').value     = '';
+  document.getElementById('custom-end').value       = '';
+  document.getElementById('custom-room').value      = '';
+  document.getElementById('custom-is-note').checked = false;
+  document.getElementById('custom-sched-form').classList.add('hidden');
 });
 
 init();

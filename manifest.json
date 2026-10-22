@@ -3,6 +3,7 @@
   "name": "KuroHunt Tool",
   "version": "1.0.0",
   "description": "Automate course registration at dangkyhoc.vnu.edu.vn",
+  "permissions": ["storage"],
   "host_permissions": [
     "https://dangkyhoc.vnu.edu.vn/*"
   ],

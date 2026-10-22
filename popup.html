@@ -147,6 +147,36 @@
         <tbody id="tt-tbody"></tbody>
       </table>
     </div>
+
+    <div class="custom-sched-section">
+      <div class="custom-sched-header">
+        <span class="custom-sched-title">Lịch tùy chỉnh</span>
+        <div class="custom-sched-actions">
+          <button id="btn-export-custom" class="btn btn-icon" title="Xuất lịch ra file JSON">↓ Export</button>
+          <button id="btn-import-custom" class="btn btn-icon" title="Nhập lịch từ file JSON">↑ Import</button>
+          <input type="file" id="import-file" accept=".json" class="hidden">
+          <button id="btn-toggle-custom-form" class="btn btn-primary">+ Thêm</button>
+        </div>
+      </div>
+      <div id="custom-sched-form" class="custom-form-row hidden">
+        <input id="custom-name" type="text" placeholder="Tên môn / sự kiện" class="custom-input">
+        <select id="custom-day" class="custom-select">
+          <option value="T2">Thứ 2</option><option value="T3">Thứ 3</option>
+          <option value="T4">Thứ 4</option><option value="T5">Thứ 5</option>
+          <option value="T6">Thứ 6</option><option value="T7">Thứ 7</option>
+        </select>
+        <input id="custom-start" type="number" min="1" max="13" placeholder="Từ tiết" class="custom-num">
+        <span class="sched-unit">–</span>
+        <input id="custom-end" type="number" min="1" max="13" placeholder="Đến tiết" class="custom-num">
+        <input id="custom-room" type="text" placeholder="Phòng" class="custom-input-sm">
+        <label class="custom-note-label" title="Chồng lên môn học sẵn có, không đánh dấu trùng">
+          <input type="checkbox" id="custom-is-note"> Ghi chú
+        </label>
+        <button id="btn-save-custom" class="btn btn-success">Lưu</button>
+        <button id="btn-cancel-custom" class="btn" style="background:#e2e8f0;color:#475569">Hủy</button>
+      </div>
+      <div id="custom-sched-list" class="custom-sched-list"></div>
+    </div>
   </div>
 
   <!-- ── Log (dùng chung) ── -->

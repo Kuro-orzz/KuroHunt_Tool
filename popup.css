@@ -363,11 +363,13 @@ tbody tr.row-pending { background: #fefce8; }
 .timetable-wrap {
   padding: 10px 12px;
   background: #fff;
+  overflow-x: hidden;
 }
 .timetable-legend {
   display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 6px 14px;
   margin-bottom: 8px;
   font-size: 11px;
   color: #475569;
@@ -439,6 +441,7 @@ tbody tr.row-pending { background: #fefce8; }
   vertical-align: top;
   height: 26px;
   overflow: hidden;
+  position: relative;
 }
 .tt-code {
   font-weight: 700;
@@ -464,4 +467,134 @@ tbody tr.row-pending { background: #fefce8; }
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
+}
+
+/* ── Custom schedule (Tab 3) ── */
+.custom-sched-section {
+  padding: 8px 12px 10px;
+  background: #f8faff;
+  border-top: 1px solid #e2e8f0;
+}
+.custom-sched-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.custom-sched-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-icon {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  padding: 3px 8px;
+}
+.custom-sched-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+}
+.custom-form-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 6px 0;
+  margin-bottom: 6px;
+}
+.custom-input {
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+  width: 140px;
+}
+.custom-input-sm {
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+  width: 70px;
+}
+.custom-select {
+  padding: 4px 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+  background: #fff;
+}
+.custom-num {
+  width: 56px;
+  padding: 4px 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: right;
+  outline: none;
+}
+.custom-input:focus, .custom-input-sm:focus, .custom-select:focus, .custom-num:focus {
+  border-color: #003087;
+}
+.custom-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 3px;
+  font-size: 11px;
+}
+.custom-entry-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.custom-entry-name {
+  font-weight: 600;
+  color: #1e293b;
+  flex-shrink: 0;
+}
+.custom-entry-info { color: #64748b; flex: 1; }
+.custom-entry-edit, .custom-entry-del {
+  background: none; border: none;
+  cursor: pointer; font-size: 12px;
+  padding: 1px 4px; border-radius: 3px; flex-shrink: 0;
+  color: #94a3b8;
+}
+.custom-entry-edit:hover { background: #e0f2fe; color: #0369a1; }
+.custom-entry-del:hover  { background: #fee2e2; color: #dc2626; }
+.custom-sched-list { max-height: 110px; overflow-y: auto; }
+.legend-custom { background: #f3e8ff; color: #7c3aed; }
+.legend-note   { background: #fef9c3; color: #854d0e; }
+
+/* note stripe rendered via inline box-shadow — no DOM element needed */
+
+.custom-note-label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.custom-note-badge {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  background: #fef9c3;
+  color: #854d0e;
+  margin-left: 2px;
 }
